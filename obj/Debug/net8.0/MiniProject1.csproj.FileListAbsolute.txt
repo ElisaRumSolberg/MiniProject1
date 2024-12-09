@@ -26,3 +26,7 @@ C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\refint\MiniProj
 C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\MiniProject1.pdb
 C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\MiniProject1.genruntimeconfig.cache
 C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\ref\MiniProject1.dll
+C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\MiniProject1.sourcelink.json
+C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\MiniProject1.csproj.AssemblyReference.cache
+C:\Users\elisa\OneDrive\Masaüstü\MiniProject1\obj\Debug\net8.0\MiniProj.924F9E0A.Up2Date

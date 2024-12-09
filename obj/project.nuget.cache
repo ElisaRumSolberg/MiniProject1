@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "vEv4J/NDGsw=",
+  "dgSpecHash": "1njGITsGMnk=",
   "success": true,
   "projectFilePath": "C:\\Users\\elisa\\OneDrive\\Masaüstü\\MiniProject1\\MiniProject1.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\elisa\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
   "logs": []
 }

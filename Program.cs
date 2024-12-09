@@ -1,96 +1,102 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
-using MiniProject1.Context;
-using MiniProject1.Models; // Bu satırı ekledik
+using Newtonsoft.Json;
+using NobelPrizeProject.Context;
+using NobelPrizeProject.Models;
 
 class Program
 {
     static void Main(string[] args)
     {
-        // JSON bağlamını oluştur ve verileri yükle
+        // 1️⃣ NobelPrizeContext sınıfı kullanılarak JSON verilerini yükle
         var context = new NobelPrizeContext();
 
-        if (context.NobelPrizes == null || context.NobelPrizes.Prizes == null)
+        // 2️⃣ JSON verisinin yüklendiğinden emin ol
+        if (context.Prizes == null || !context.Prizes.Any())
         {
-            Console.WriteLine("JSON verisi yüklenemedi.");
+            Console.WriteLine("Failed to load JSON data or no prizes found.");
             return;
         }
 
-        // 1️⃣ Select() - Ödül Kategorilerini Listele
-        var categories = context.NobelPrizes.Prizes
-            .Select(p => new { p.Year, p.Category })
+        // 3️⃣ Select() - Yıl ve Kategorileri Listele
+        Console.WriteLine("\n1️⃣ Yıl ve Kategoriler:");
+        var yearAndCategory = context.Prizes
+            .Select(prize => new { Year = prize.Year ?? "Unknown", Category = prize.Category ?? "Unknown" })
             .ToList();
 
-        Console.WriteLine("\nKategoriler:");
-        foreach (var category in categories)
+        foreach (var item in yearAndCategory)
         {
-            Console.WriteLine($"{category.Year} - {category.Category}");
+            Console.WriteLine($"Year: {item.Year}, Category: {item.Category}");
         }
 
-        // 2️⃣ SelectMany() - Tüm Kazananları Listele
-        var laureates = context.NobelPrizes.Prizes
-            .SelectMany(p => p.Laureates ?? new List<Laureate>()) // Bu satırda değişiklik yaptık
-            .Select(l => new { l.Firstname, l.Surname })
-            .ToList();
-
-        Console.WriteLine("\nKazananlar:");
-        foreach (var laureate in laureates)
-        {
-            if (laureate != null) // Null kontrolü
-            {
-                Console.WriteLine($"{laureate.Firstname} {laureate.Surname}");
-            }
-        }
-
-        // 3️⃣ GroupBy() - Ödülleri Yıllara Göre Grupla
-        var prizesByYear = context.NobelPrizes.Prizes
-            .GroupBy(p => p.Year ?? "Bilinmeyen Yıl") // Null kontrolü
-            .Select(g => new { Year = g.Key, Count = g.Count() })
-            .ToList();
-
-        Console.WriteLine("\nYıllara Göre Ödül Sayısı:");
-        foreach (var prize in prizesByYear)
-        {
-            Console.WriteLine($"{prize.Year}: {prize.Count} ödül");
-        }
-
-        // 🟢 BONUS: Kullanıcıdan Kategori veya Yıl Al ve Arama Yap 🟢
-        Console.WriteLine("\nBONUS: Lütfen bir kategori (örneğin: 'chemistry') veya yıl (örneğin: '2024') girin:");
-        string? userInput = Console.ReadLine()?.Trim();
-
-        if (string.IsNullOrEmpty(userInput))
-        {
-            Console.WriteLine("Geçersiz giriş. Program sonlandırılıyor.");
-            return;
-        }
-
-        // Kullanıcıdan alınan girdiye göre ödülleri bul
-        var searchResults = context.NobelPrizes.Prizes
-            .Where(p => p.Category != null && p.Category.Equals(userInput, StringComparison.OrdinalIgnoreCase) 
-                     || p.Year != null && p.Year.Equals(userInput))
-            .Select(p => new 
+        // 4️⃣ SelectMany() - Tüm Kazananları Listele
+        Console.WriteLine("\n2️⃣ Tüm Kazananlar:");
+        var laureates = context.Prizes
+            .Where(prize => prize.Laureates != null)
+            .SelectMany(prize => prize.Laureates!)
+            .Select(laureate => new 
             { 
-                Year = p.Year, 
-                Category = p.Category, 
-                Laureates = p.Laureates?.Select(l => $"{l.Firstname} {l.Surname}").ToList() 
+                Firstname = laureate.Firstname ?? "Unknown", 
+                Surname = laureate.Surname ?? "Unknown", 
+                Motivation = laureate.Motivation ?? "No Motivation Provided" 
             })
             .ToList();
 
-        if (searchResults.Count == 0)
+        foreach (var laureate in laureates)
         {
-            Console.WriteLine($"\n'{userInput}' için herhangi bir ödül bulunamadı.");
+            Console.WriteLine($"{laureate.Firstname} {laureate.Surname}: {laureate.Motivation}");
         }
-        else
+
+        // 5️⃣ GroupBy() - Ödülleri Kategorilere Göre Grupla ve Say
+        Console.WriteLine("\n3️⃣ Kategorilere Göre Ödül Sayısı:");
+        var prizesByCategory = context.Prizes
+            .GroupBy(prize => prize.Category ?? "Unknown")
+            .Select(group => new 
+            { 
+                Category = group.Key, 
+                PrizeCount = group.Count() 
+            })
+            .ToList();
+
+        foreach (var group in prizesByCategory)
         {
-            Console.WriteLine($"\n'{userInput}' için bulunan ödüller:");
-            foreach (var prize in searchResults)
+            Console.WriteLine($"Category: {group.Category}, Prize Count: {group.PrizeCount}");
+        }
+
+        // 6️⃣ BONUS: Kullanıcıdan Yıl veya Kategori Girdisi Al
+        Console.WriteLine("\n4️⃣ BONUS: Lütfen bir yıl veya kategori girin (örnek: '2024' veya 'chemistry'):");
+        string? userInput = Console.ReadLine()?.Trim();
+
+        if (!string.IsNullOrEmpty(userInput))
+        {
+            // Kullanıcıdan alınan girdiyle ödülleri bul
+            var searchResults = context.Prizes
+                .Where(prize => 
+                    (prize.Year != null && prize.Year.Equals(userInput, StringComparison.OrdinalIgnoreCase)) ||
+                    (prize.Category != null && prize.Category.Equals(userInput, StringComparison.OrdinalIgnoreCase))
+                )
+                .Select(prize => new 
+                { 
+                    Year = prize.Year, 
+                    Category = prize.Category, 
+                    Laureates = prize.Laureates?.Select(l => $"{l.Firstname} {l.Surname}").ToList() 
+                })
+                .ToList();
+
+            if (!searchResults.Any())
             {
-                if (prize != null) // Null kontrolü
+                Console.WriteLine($"\n'{userInput}' için herhangi bir ödül bulunamadı.");
+            }
+            else
+            {
+                Console.WriteLine($"\n'{userInput}' için bulunan ödüller:");
+                foreach (var prize in searchResults)
                 {
-                    Console.WriteLine($"\nYıl: {prize.Year}, Kategori: {prize.Category}");
-                    Console.WriteLine("Kazananlar:");
+                    Console.WriteLine($"Year: {prize.Year}, Category: {prize.Category}");
                     if (prize.Laureates != null)
                     {
+                        Console.WriteLine("Laureates:");
                         foreach (var laureate in prize.Laureates)
                         {
                             Console.WriteLine($"- {laureate}");
@@ -98,6 +104,10 @@ class Program
                     }
                 }
             }
+        }
+        else
+        {
+            Console.WriteLine("No input provided. Exiting...");
         }
     }
 }
